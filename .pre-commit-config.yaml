@@ -1,0 +1,32 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0  # Укажите последнюю версию
+    hooks:
+      - id: trailing-whitespace
+        files: \.py
+      - id: end-of-file-fixer
+        language_version: "3.9"
+      - id: check-yaml
+        exclude: ^venv/
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        exclude: ^venv/
+  - repo: https://github.com/psf/black
+    rev: 24.8.0  # Укажите последнюю версию
+    hooks:
+      - id: black
+        files: \.py$
+        exclude: ^venv/
+        language_version: "3.9"
+  - repo: https://github.com/PyCQA/pylint
+    rev: v3.2.7
+    hooks:
+      - id: pylint
+        language: system
+        types: [ python ]
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.10.1
+    hooks:
+      - id: isort
