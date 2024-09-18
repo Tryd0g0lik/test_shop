@@ -1,7 +1,7 @@
 """This is a test for authorisation's form."""
 
 import pytest
-from playwright.async_api import async_playwright
+from playwright.async_api import Page, async_playwright
 
 from __tests__.dotenv_ import TEST_HOST, TEST_LOGIN, TEST_PASSWORD
 
@@ -43,12 +43,35 @@ testdata = [
 ]
 
 
+async def fill_feields(one_page: Page, login, password) -> [bool, Page]:
+    """Fill to the login form"""
+    await one_page.goto(f"https://www.{TEST_HOST}/")
+    result = await one_page.title()
+    if result == "Swag Labs":
+        await one_page.get_by_placeholder("Username").fill(login)
+        await one_page.get_by_placeholder("Password").fill(password)
+        return one_page
+    return False
+
+
+@pytest.fixture()
+async def browsers():
+    """Open the browser"""
+    async with async_playwright() as playwright:
+        webkit = playwright.webkit
+        browser = await webkit.launch()
+        context = await browser.new_context()
+        yield context
+        await context.close()
+        await browser.close()
+
+
 @pytest.mark.parametrize("login, password, ind, excepted", testdata)
-async def test_autorization_form_group(login, password, ind, excepted):
+async def test_autorization_form_group(browsers, login, password, ind, excepted):
     """
     This is a test for authorisation's form. Form from main page (first).
         Itself has a some parametrize and folder 'pic' (from a root project).
-
+    0. Test's lines: 15, 17, 27, 28, 30 it's more
     1. Folder pic. In going cycle of test the folder 'pic' will receive
         screenshots. It has names (number from name is line's id):
         - `screenshot_0_page.png` on the start test.
@@ -66,34 +89,29 @@ async def test_autorization_form_group(login, password, ind, excepted):
     :param excepted: bool
     :return: void
     """
-    async with async_playwright() as playwright:
-        webkit = playwright.webkit
-        browser = await webkit.launch()
-        context = await browser.new_context()
-        page = await context.new_page()
-        await page.goto(f"https://www.{TEST_HOST}/")
+    # async with async_playwright() as playwright:
+    # webkit = playwright.webkit
+    # browser = await webkit.launch()
+    # context = await browser.new_context()
+    page = await browsers.new_page()
+    await page.goto(f"https://www.{TEST_HOST}/")
+    result_bool = await fill_feields(page, login, password)
+    assert result_bool is False
 
-        if await page.title() != "Swag Labs":
-            pass
-        else:
-            # Fill to the login form
-            await page.get_by_placeholder("Username").fill(login)
-            await page.get_by_placeholder("Password").fill(password)
+    # Make screen
+    await page.screenshot(path=f"./pic/screenshot_{ind}_page.png")
+    await page.locator('input[type="submit"]').click()
+    res_true_false: bool = False
 
-            # Make screen
-            await page.screenshot(path=f"./pic/screenshot_{ind}_page.png")
-            await page.locator('input[type="submit"]').click()
-            res_true_false: bool = False
+    # This is simple except/timeout
+    page.get_by_text("Epic ")
 
-            # This is simple except/timeout
-            page.get_by_text("Epic ")
-
-            if "/inventory.html" in page.url:
-                await page.wait_for_url("**/inventory.html")
-                await page.screenshot(path=f"./pic/screenshot_{ind}_navigate.png")
-                res_true_false = True
-            else:
-                await page.screenshot(path=f"./pic/screenshot_{ind}error.png")
-            assert res_true_false == excepted
-        await context.close()
-        await browser.close()
+    await page.wait_for_url("**/inventory.html")
+    if "/inventory.html" in page.url:
+        await page.screenshot(path=f"./pic/screenshot_{ind}_navigate.png")
+        res_true_false = True
+    else:
+        await page.screenshot(path=f"./pic/screenshot_{ind}error.png")
+    assert res_true_false == excepted
+    # await page.close()
+    await browsers.close()

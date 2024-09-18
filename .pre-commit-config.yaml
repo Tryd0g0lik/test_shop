@@ -22,7 +22,7 @@ repos:
         language_version: "3.9"
   - repo: https://github.com/PyCQA/pylint
     rev: v3.2.7
-    hooks:
+    hooks: # plus .pylintrc
       - id: pylint
         language: system
         types: [ python ]
