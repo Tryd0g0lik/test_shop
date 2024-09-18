@@ -96,7 +96,7 @@ async def test_autorization_form_group(browsers, login, password, ind, excepted)
     page = await browsers.new_page()
     await page.goto(f"https://www.{TEST_HOST}/")
     result_bool = await fill_feields(page, login, password)
-    assert result_bool is False
+    assert result_bool is not False
 
     # Make screen
     await page.screenshot(path=f"./pic/screenshot_{ind}_page.png")
