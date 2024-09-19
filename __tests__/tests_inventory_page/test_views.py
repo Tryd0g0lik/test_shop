@@ -8,6 +8,9 @@ from playwright.async_api import Page, async_playwright, expect
 from __tests__.dotenv_ import TEST_HOST
 from __tests__.tests_main_page.test_views import fill_feields, testdata
 
+# This is point for dependence after.
+SECTION_TITLE: str = "Sauce Labs Backpack"
+
 
 @pytest.fixture()
 async def browsers_inventory():
@@ -26,7 +29,7 @@ inventory_testdata = [
         testdata[0][3],
         ".inventory_item",
         "text",
-        "Sauce Labs Backpack",
+        SECTION_TITLE,
     ),
     (
         testdata[0][0],
@@ -83,23 +86,32 @@ async def test_combined_inventory(
     await page.goto(f"https://www.{TEST_HOST}/inventory.html")
     await if_not_true.wait_for_url("**/inventory.html", timeout=4000)
     assert "inventory.html" in page.url
-    # Position 'Sauce Labs Backpack' look up and click
 
+    # Position 'Sauce Labs Backpack' look up and click
     await page.screenshot(
         path=f"./___tests__/tests_inventory_page/pic/screenshot_{ind}_page.png",
     )
-    position = page.locator(".inventory_item[data-test='inventory-item']")
-    # Check if it's a string
+    locators = page.locator(".inventory_item[data-test='inventory-item']")
+
+    # title and descrip of position
     if isinstance(text, str) is str and view == "text":
+        await expect(locators.filter(has_text=text)).to_contain_text(text)
 
-        await expect(position.filter(has_text=text)).to_contain_text(text)
-
+    # price of position
     elif isinstance(text, re.Pattern) and view == "pattern":
-        element = position.get_by_text("$").and_(position.get_by_text(text))
+        element = (
+            locators.filter(has_text=SECTION_TITLE)
+            .get_by_text("$")
+            .filter(has_text=text)
+        )
 
         assert await element.count() > 0
+
+    # button
     elif view == "role":
-        element = position.get_by_role("button", name=text)
+        element = locators.filter(has_text=SECTION_TITLE).get_by_role(
+            "button", name=text
+        )
         assert await element.count() > 0
 
     # Check if it's a regex pattern
