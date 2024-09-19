@@ -64,6 +64,48 @@ inventory_testdata = [
 ]
 
 
+async def open_inventory_page(browsers, login, password):
+    """
+    Open the page
+    :param browsers:
+    :param login:
+    :param password:
+    :return:
+    """
+    context = await browsers.new_context()
+    page: Page = await context.new_page()
+    if_not_true = await fill_feields(page, login, password)
+
+    assert if_not_true is not False
+    await page.locator('input[type="submit"]').click()
+    # Relocation after the login
+    await page.goto(f"https://www.{TEST_HOST}/inventory.html")
+    await if_not_true.wait_for_url("**/inventory.html", timeout=4000)
+    assert "inventory.html" in page.url
+    # Position 'Sauce Labs Backpack' look up and click
+    locators = page.locator(".inventory_item[data-test='inventory-item']")
+    return [page, context, locators]
+
+
+async def add_product_to_cart(page, locators):
+    """
+
+    :param page:
+    :param locators:
+    :return:
+    """
+    await expect(locators.filter(has_text=SECTION_TITLE)).to_contain_text(SECTION_TITLE)
+    ree = locators.get_by_text(text=SECTION_TITLE)
+    await ree.click()
+    await expect(page).to_have_url(
+        re.compile(r"/inventory-item\.html\?id=[0-9]+$"), timeout=7000
+    )
+    await expect(
+        page.locator("button[id='add-to-cart']").get_by_text("Add to cart")
+    ).to_have_text("Add to cart")
+    await page.locator("button[id='add-to-cart']").click()
+
+
 @pytest.mark.parametrize(
     "login, password, ind, excepted, select, view, text", inventory_testdata
 )
@@ -92,35 +134,13 @@ async def test_combined_inventory(
     :param excepted: bool. inheritance from the first test. It is no need.
     :return:
     """
-    # Open the page
-    context = await browsers_inventory.new_context()
-    page: Page = await context.new_page()
-    if_not_true = await fill_feields(page, login, password)
-
-    assert if_not_true is not False
-    await page.locator('input[type="submit"]').click()
-    # Relocation after the login
-    await page.goto(f"https://www.{TEST_HOST}/inventory.html")
-    await if_not_true.wait_for_url("**/inventory.html", timeout=4000)
-    assert "inventory.html" in page.url
-
-    # Position 'Sauce Labs Backpack' look up and click
-    locators = page.locator(".inventory_item[data-test='inventory-item']")
+    page, context, locators = await open_inventory_page(
+        browsers_inventory, login, password
+    )
 
     # title and descrip of position, Param inventory_testdata[0] and [0:4:3]
     if isinstance(text, str) and view == "text":
-        await expect(locators.filter(has_text=SECTION_TITLE)).to_contain_text(
-            SECTION_TITLE
-        )
-        ree = locators.get_by_text(text=SECTION_TITLE)
-        await ree.click()
-        await expect(page).to_have_url(
-            re.compile(r"/inventory-item\.html\?id=[0-9]+$"), timeout=7000
-        )
-        await expect(
-            page.locator("button[id='add-to-cart']").get_by_text("Add to cart")
-        ).to_have_text("Add to cart")
-        await page.locator("button[id='add-to-cart']").click()
+        await add_product_to_cart(page, locators)
 
     # price of position.  inventory_testdata[3]
     elif isinstance(text, re.Pattern) and view == "pattern":
@@ -135,9 +155,7 @@ async def test_combined_inventory(
             path=f"./___tests__/tests_inventory_page/\
                 pic/screenshot_{ind}_page.png"
         )
-        # await page.screenshot(
-        #     path=f"./___tests__/tests_inventory_page/pic/screenshot2_{ind}_page.png",
-        # )
+
         await locators.filter(has_text=SECTION_TITLE).locator(
             "button", has_text="Add to cart"
         ).click()
