@@ -18,8 +18,60 @@ async def browsers_inventory():
         yield browser
 
 
-@pytest.mark.parametrize("login, password, ind, excepted", testdata[:1])
-async def test_combined_inventory(browsers_inventory, login, password, ind, excepted):
+inventory_testdata = [
+    (
+        testdata[0][0],
+        testdata[0][1],
+        testdata[0][2],
+        testdata[0][3],
+        ".inventory_item",
+        "text",
+        "Sauce Labs Backpack",
+    ),
+    (
+        testdata[0][0],
+        testdata[0][1],
+        testdata[0][2],
+        testdata[0][3],
+        ".inventory_item",
+        "role",
+        "Add to cart",
+    ),
+    (
+        testdata[0][0],
+        testdata[0][1],
+        testdata[0][2],
+        testdata[0][3],
+        ".inventory_item",
+        "text",
+        "carry.allTheThings() with the sleek, streamlined Sly Pack that melds \
+        uncompromising style with unequaled laptop and tablet protection.",
+    ),
+    (
+        testdata[0][0],
+        testdata[0][1],
+        testdata[0][2],
+        testdata[0][3],
+        ".inventory_item",
+        "pattern",
+        re.compile(r"\d{1,3}\.\d{1,2}"),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "login, password, ind, excepted, select, view, text", inventory_testdata
+)
+async def test_combined_inventory(
+    browsers_inventory: pytest.fixture,
+    login: str,
+    password: str,
+    ind: str,
+    select: str,
+    view: str,
+    text: str,
+    excepted: [str, re.Pattern],
+):
 
     context = await browsers_inventory.new_context()
     page: Page = await context.new_page()
@@ -32,14 +84,27 @@ async def test_combined_inventory(browsers_inventory, login, password, ind, exce
     await if_not_true.wait_for_url("**/inventory.html", timeout=4000)
     assert "inventory.html" in page.url
     # Position 'Sauce Labs Backpack' look up and click
-    await expect(page.get_by_text("Sauce Labs Backpack")).to_have_text(
-        "Sauce Labs Backpack"
+
+    await page.screenshot(
+        path=f"./___tests__/tests_inventory_page/pic/screenshot_{ind}_page.png",
     )
+    position = page.locator(".inventory_item[data-test='inventory-item']")
+    # Check if it's a string
+    if isinstance(text, str) is str and view == "text":
+
+        await expect(position.filter(has_text=text)).to_contain_text(text)
+
+    elif isinstance(text, re.Pattern) and view == "pattern":
+        element = position.get_by_text("$").and_(position.get_by_text(text))
+
+        assert await element.count() > 0
+    elif view == "role":
+        element = position.get_by_role("button", name=text)
+        assert await element.count() > 0
+
+    # Check if it's a regex pattern
     await page.get_by_text("Sauce Labs Backpack").click()
     await expect(page).to_have_url(re.compile(r"/inventory-item\.html\?id=[0-9]+$"))
-    # await page.screenshot(
-    #     path=f"./___tests__/tests_inventory_page/pic/screenshot_{ind}_page.png"
-    # )
 
     # Single position adding into the cart
     await expect(
@@ -53,5 +118,6 @@ async def test_combined_inventory(browsers_inventory, login, password, ind, exce
     await expect(
         page.locator(".shopping_cart_link[data-test='shopping-cart-link']")
     ).not_to_be_empty()
+
     await context.close()
     await browsers_inventory.close()
