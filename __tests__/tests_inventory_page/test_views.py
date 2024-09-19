@@ -77,6 +77,22 @@ async def test_combined_inventory(
     text: [str, re.Pattern],
     excepted: bool,
 ):
+    """
+    This a test that where we can to make a click and then do navigate to
+    the product page.
+    :param browsers_inventory: browser is a fixture
+    :param login: str
+    :param password: str
+    :param ind: # This an id param, simple. We can to see the error if \
+        will been. Which the param from id do receive an error.
+    :param select: str. This selector of the total/general contain for \
+        after the work all
+    :param view: str This is data type for "inventory_testdata[0][-1]"
+    :param text: [str, re.Pattern]  What expect we for search
+    :param excepted: bool. inheritance from the first test. It is no need.
+    :return:
+    """
+    # Open the page
     context = await browsers_inventory.new_context()
     page: Page = await context.new_page()
     if_not_true = await fill_feields(page, login, password)
@@ -91,7 +107,7 @@ async def test_combined_inventory(
     # Position 'Sauce Labs Backpack' look up and click
     locators = page.locator(".inventory_item[data-test='inventory-item']")
 
-    # title and descrip of position
+    # title and descrip of position, Param inventory_testdata[0] and [0:4:3]
     if isinstance(text, str) and view == "text":
         await expect(locators.filter(has_text=SECTION_TITLE)).to_contain_text(
             SECTION_TITLE
@@ -105,7 +121,8 @@ async def test_combined_inventory(
             page.locator("button[id='add-to-cart']").get_by_text("Add to cart")
         ).to_have_text("Add to cart")
         await page.locator("button[id='add-to-cart']").click()
-    # price of position
+
+    # price of position.  inventory_testdata[3]
     elif isinstance(text, re.Pattern) and view == "pattern":
         element = (
             locators.filter(has_text=SECTION_TITLE)
@@ -124,9 +141,8 @@ async def test_combined_inventory(
         await locators.filter(has_text=SECTION_TITLE).locator(
             "button", has_text="Add to cart"
         ).click()
-        # .get_by_text("Add to cart").click()
 
-    # button
+    # button  Param inventory_testdata[1]
     elif view == "role":
         # Here one section chose and look up to the button
         element = locators.filter(has_text=SECTION_TITLE).get_by_role(
@@ -149,8 +165,8 @@ async def test_combined_inventory(
         locator = page.locator(".shopping_cart_link[data-test='shopping-cart-link']")
         await expect(locator).to_be_empty()
 
-    except ImportError:
-        pass
+    except Exception as err:
+        print(err)
     finally:
 
         # Look on a cart 2/2
