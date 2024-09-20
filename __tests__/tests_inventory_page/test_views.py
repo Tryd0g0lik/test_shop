@@ -70,7 +70,10 @@ async def open_inventory_page(browsers, login, password):
     :param browsers:
     :param login:
     :param password:
-    :return:
+    :return: [page, context, locators] where a "page" is \
+        the page contain the DOM of "inventory.html". \
+        "context" for a close when to the test completing \
+        "locators" - this attribute use to def "add_product_to_cart" and end.
     """
     context = await browsers.new_context()
     page: Page = await context.new_page()
