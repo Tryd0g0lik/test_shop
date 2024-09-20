@@ -40,7 +40,8 @@ testdata = [
     (TEST_LOGIN, TEST_PASSWORD.lower(), "30", False),
     (TEST_LOGIN, TEST_PASSWORD.swapcase(), "31", False),
     (TEST_LOGIN, f"{TEST_PASSWORD[:3]} {TEST_PASSWORD[5:]}", "32", False),
-]
+]  # This is not All. For me, the conditions verification are not known.
+# Their, here inserting can been, for check.
 
 
 async def fill_feields(one_page: Page, login, password) -> [bool, Page]:
