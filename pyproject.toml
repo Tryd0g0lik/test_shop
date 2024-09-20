@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "t-test-shop"
 version = "0.1.0"
-description = ""
+description = "README.md"
 authors = ["Tryd0g0lik <work80@mail.ru>"]
-readme = "README.md"
+readme = "https://github.com/Tryd0g0lik/test_shop.git"
 
 [tool.poetry.dependencies]
 python = "^3.9"
