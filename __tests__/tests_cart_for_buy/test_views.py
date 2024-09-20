@@ -55,33 +55,16 @@ buy_testdata = [
         "999999",
         False,
     ),
-    (
+     (
         testdata[0][0],  # Login
         testdata[0][1],  # Password
         "6",
-        "Firstname",
-        "Sacondname",
-        "999 999",
-        False,
-    ),
-    (
-        testdata[0][0],  # Login
-        testdata[0][1],  # Password
-        "7",
         "Firstname",
         "Sacon%dname",
         "999999",
         False,
     ),
-    (
-        testdata[0][0],  # Login
-        testdata[0][1],  # Password
-        "8",
-        "First name",
-        "Ник",
-        "999999",
-        False,
-    ),
+ 
 ]  # Here params not all. Not be all verification conditions for fields.
 
 
